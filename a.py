@@ -1,4 +1,4 @@
-user_token = open("user_token.txt").read().strip() # token from p<...>a
+user_token = open("user_token.txt").read().strip() # personal token
 
 import requests
 import urllib.parse
