@@ -14,7 +14,10 @@ result = requests.post(f"https://www.bing.com/images/create?q={encoded_prompt}&r
 try:
     redirect_location = result.headers["location"]
 except KeyError:
-    raise Exception("prompt block")
+    if "/rp/nEqBJbE4r-1QQJcUGf6n2NdpYsY.svg" in result.text:
+        raise Exception("geolocation block")
+    else:
+        raise Exception("prompt block")
 request_id = re.search(r"&id=(.+?)(&|$)", redirect_location).group(1)
 polling_url = f"https://www.bing.com/images/create/async/results/{request_id}?q={encoded_prompt}"
 
