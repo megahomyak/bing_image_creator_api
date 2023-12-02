@@ -15,17 +15,6 @@ class TooManyRequests(Exception):
 
 ImageLinks = NewType("ImageLinks", List[str])
 
-def _filter_image_links(image_links) -> ImageLinks:
-    filtered_links = []
-    for link in image_links:
-        if link == "/rp/TX9QuO3WzcCJz1uaaSwQAz39Kb0.jpg":
-            raise ServersAreOverloaded()
-        if link == "/rp/in-2zU3AJUdkgFe7ZKv19yPBHVs.png":
-            raise UnsafeImageContentDetected()
-        if not link.endswith(".svg"):
-            filtered_links.append(link)
-    return ImageLinks(filtered_links)
-
 async def create(user_token: str, prompt: str) -> ImageLinks:
     async with aiohttp.ClientSession(
             cookies={"_U": user_token},
@@ -52,5 +41,14 @@ async def create(user_token: str, prompt: str) -> ImageLinks:
                     response_text = await response.text()
                     if response_text:
                         image_links = re.findall(r'src="(.+?)"', response_text)
-                        return _filter_image_links(image_links)
+                        processed_links = []
+                        for link in image_links:
+                            link = urllib.parse.urlparse(link).path
+                            if link == "/rp/TX9QuO3WzcCJz1uaaSwQAz39Kb0.jpg":
+                                raise ServersAreOverloaded()
+                            if link == "/rp/in-2zU3AJUdkgFe7ZKv19yPBHVs.png":
+                                raise UnsafeImageContentDetected()
+                            if not link.endswith(".svg"):
+                                processed_links.append(link)
+                        return ImageLinks(processed_links)
                     await asyncio.sleep(1)
