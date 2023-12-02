@@ -3,7 +3,6 @@ import asyncio
 import urllib.parse
 import aiohttp
 
-from bing_image_creator_api.api import ServersAreOverloaded
 from . import UnsafeImageContentDetected, create
 import imghdr
 import traceback
@@ -32,8 +31,6 @@ async def loop(token: str, token_number: int):
                     urls = await create(token, args.prompt)
                 except UnsafeImageContentDetected:
                     pass
-                except ServersAreOverloaded:
-                    await asyncio.sleep(5)
                 else:
                     generations_amount += len(urls)
                     for url in urls:
