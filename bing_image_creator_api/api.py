@@ -1,4 +1,5 @@
 import asyncio
+import json
 import urllib.parse
 import aiohttp
 import re
@@ -53,17 +54,26 @@ async def create(user_token: str, prompt: str) -> ImageLinks:
                         raise TemporaryBackendError()
                     if response_text:
                         logging.debug(f"response text for a generation result: {response_text}")
-                        image_links = re.findall(r'src="(.+?)"', response_text)
-                        if not image_links:
-                            # We were given an error JSON
+                        try:
+                            error_json = json.loads(response_text)
+                        except json.JSONDecodeError:
+                            pass
+                        else:
+                            if error_json["errorMessage"] == "Pending":
+                                # I AM REALLY NOT SURE ABOUT THIS ONE
+                                raise UnsafeImageContentDetected()
                             continue
-                        error_element = bs4.BeautifulSoup(response_text, "html.parser").find(attrs={"id": "girer"})
+                        images_html = bs4.BeautifulSoup(response_text, "html.parser")
+                        error_element = images_html.find(attrs={"id": "girer"})
                         if error_element is not None:
                             if "Unsafe image content detected" in str(error_element):
                                 raise UnsafeImageContentDetected()
                             elif "Due to high demand, we're unable to process new requests. Please try again later" in str(error_element):
                                 raise ServersAreOverloaded()
                             raise UnexpectedServerResponse()
+                        image_links = []
+                        for element in images_html.find_all("img"):
+                            image_links.append(element["src"])
                         processed_links = []
                         for link in image_links:
                             link = link.split("?", 1)[0] # Removing the image size parameters
