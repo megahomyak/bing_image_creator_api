@@ -48,7 +48,7 @@ async def loop(token: str, token_number: int):
 
 async def main():
     try:
-        await create(tokens[0], args.prompt)
+        await create_and_save(tokens[0])
     except UnsafeImageContentDetected:
         pass
     await asyncio.gather(*(
