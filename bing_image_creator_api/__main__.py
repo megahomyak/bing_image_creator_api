@@ -13,7 +13,7 @@ parser = ArgumentParser()
 parser.add_argument("-t", "--token-file", required=True)
 parser.add_argument("-p", "--prompt", required=True)
 parser.add_argument("-n", "--minimum-generations-amount", type=int)
-parser.add_argument("-l", "--log-level", default="DEBUG")
+parser.add_argument("-l", "--log-level", default="WARNING")
 
 args = parser.parse_args()
 
