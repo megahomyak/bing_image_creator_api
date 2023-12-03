@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 import asyncio
+import logging
 import urllib.parse
 import aiohttp
 
@@ -12,8 +13,11 @@ parser = ArgumentParser()
 parser.add_argument("-t", "--token-file", required=True)
 parser.add_argument("-p", "--prompt", required=True)
 parser.add_argument("-n", "--minimum-generations-amount", type=int)
+parser.add_argument("-l", "--log-level", default="DEBUG")
 
 args = parser.parse_args()
+
+logging.basicConfig(level=args.log_level.upper())
 
 with open(args.token_file, encoding="utf-8") as f:
     lines = f.read().splitlines()

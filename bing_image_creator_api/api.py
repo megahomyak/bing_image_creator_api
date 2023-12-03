@@ -3,6 +3,7 @@ import urllib.parse
 import aiohttp
 import re
 from typing import List, NewType
+import logging
 
 class GeolocationBlock(Exception): pass
 class PromptBlock(Exception): pass
@@ -28,6 +29,7 @@ async def create(user_token: str, prompt: str) -> ImageLinks:
                 allow_redirects=False,
         ) as response:
             response_text = await response.text()
+            logging.debug(f"response text for a query: {response_text}")
             # All of these check are possible because of language headers!
             if "Please wait until your other ongoing creations are complete before trying to create again." in response_text:
                 raise TooManyRequests()
@@ -48,7 +50,11 @@ async def create(user_token: str, prompt: str) -> ImageLinks:
                     if "Bing isn't avaiable right now, but everything should be back to normal very soon" in response_text:
                         raise TemporaryBackendError()
                     if response_text:
+                        logging.debug(f"response text for a generation result: {response_text}")
                         image_links = re.findall(r'src="(.+?)"', response_text)
+                        if not image_links:
+                            # We were given an error
+                            continue
                         processed_links = []
                         for link in image_links:
                             link = link.split("?", 1)[0] # Removing the image size parameters
