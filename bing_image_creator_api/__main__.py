@@ -4,7 +4,7 @@ import logging
 import urllib.parse
 import aiohttp
 
-from bing_image_creator_api.api import TemporaryBackendError
+from bing_image_creator_api.api import TemporaryBackendError, TooManyRequests
 
 from . import UnsafeImageContentDetected, create
 import traceback
@@ -56,11 +56,15 @@ async def loop(token: str, token_number: int):
         traceback.print_exc()
 
 async def main():
+    token_index = 0
     while True:
+        token = tokens[token_index]
         try:
-            await create_and_save(tokens[0])
+            await create_and_save(token)
         except TemporaryBackendError:
             pass
+        except TooManyRequests:
+            token_index += 1
         else:
             break
     await asyncio.gather(*(
