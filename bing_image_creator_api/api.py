@@ -43,7 +43,7 @@ async def create(user_token: str, prompt: str) -> ImageLinks:
                         image_links = re.findall(r'src="(.+?)"', response_text)
                         processed_links = []
                         for link in image_links:
-                            link = urllib.parse.urlparse(link).path
+                            link = link.split("?", 1)[0] # Removing the image size parameters
                             if link == "/rp/TX9QuO3WzcCJz1uaaSwQAz39Kb0.jpg":
                                 raise ServersAreOverloaded()
                             if link == "/rp/in-2zU3AJUdkgFe7ZKv19yPBHVs.png":
