@@ -4,6 +4,7 @@ import aiohttp
 import re
 from typing import List, NewType
 import logging
+import bs4
 
 class GeolocationBlock(Exception): pass
 class PromptBlock(Exception): pass
@@ -15,6 +16,7 @@ class TooManyRequests(Exception):
     """
 class PromptNotDescriptiveEnough(Exception): pass
 class TemporaryBackendError(Exception): pass
+class UnexpectedServerResponse(Exception): pass
 
 ImageLinks = NewType("ImageLinks", List[str])
 
@@ -53,15 +55,18 @@ async def create(user_token: str, prompt: str) -> ImageLinks:
                         logging.debug(f"response text for a generation result: {response_text}")
                         image_links = re.findall(r'src="(.+?)"', response_text)
                         if not image_links:
-                            # We were given an error
+                            # We were given an error JSON
                             continue
+                        error_element = bs4.BeautifulSoup(response_text, "html.parser").find(attrs={"id": "girer"})
+                        if error_element is not None:
+                            if "Unsafe image content detected" in str(error_element):
+                                raise UnsafeImageContentDetected()
+                            elif "Due to high demand, we're unable to process new requests. Please try again later" in str(error_element):
+                                raise ServersAreOverloaded()
+                            raise UnexpectedServerResponse()
                         processed_links = []
                         for link in image_links:
                             link = link.split("?", 1)[0] # Removing the image size parameters
-                            if link == "/rp/TX9QuO3WzcCJz1uaaSwQAz39Kb0.jpg":
-                                raise ServersAreOverloaded()
-                            if link == "/rp/in-2zU3AJUdkgFe7ZKv19yPBHVs.png":
-                                raise UnsafeImageContentDetected()
                             if not link.endswith(".svg"):
                                 processed_links.append(link)
                         return ImageLinks(processed_links)
