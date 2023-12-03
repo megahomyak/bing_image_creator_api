@@ -12,6 +12,7 @@ class TooManyRequests(Exception):
     """
     You either need to wait until the last generation completes, or you've just been rate limited (the limitations are lifted after a while, don't worry)
     """
+class PromptNotDescriptiveEnough(Exception): pass
 
 ImageLinks = NewType("ImageLinks", List[str])
 
@@ -33,6 +34,8 @@ async def create(user_token: str, prompt: str) -> ImageLinks:
                 raise GeolocationBlock()
             if "This prompt has been blocked. Our system automatically flagged this prompt" in response_text:
                 raise PromptBlock()
+            if "Please provide a more descriptive prompt" in response_text:
+                raise PromptNotDescriptiveEnough()
             redirect_location = response.headers["location"]
             request_id = re.search(r"&id=(.+?)(&|$)", redirect_location).group(1)
             polling_url = f"https://www.bing.com/images/create/async/results/{request_id}?q={encoded_prompt}"
