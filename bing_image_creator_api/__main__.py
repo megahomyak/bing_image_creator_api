@@ -35,12 +35,17 @@ async def create_and_save(token: str):
         else:
             generations_amount += len(urls)
             for url in urls:
-                async with http_client.get(url) as file_response:
-                    image_name = urllib.parse.urlparse(url).path.rsplit("/", 1)[1]
-                    image_bytes = await file_response.read()
-                    file_name = f"{image_name}.jpeg"
-                    with open(file_name, "wb") as f:
-                        f.write(image_bytes)
+                while True:
+                    async with http_client.get(url) as response:
+                        if response.headers["Content-Type"].startswith("image"):
+                            # This is an error page
+                            continue
+                        image_bytes = await response.read()
+                        image_name = urllib.parse.urlparse(url).path.rsplit("/", 1)[1]
+                        file_name = f"{image_name}.jpeg"
+                        with open(file_name, "wb") as f:
+                            f.write(image_bytes)
+                        break
 
 async def loop(token: str, token_number: int):
     try:

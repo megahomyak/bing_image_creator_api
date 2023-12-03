@@ -48,12 +48,13 @@ async def create(user_token: str, prompt: str) -> ImageLinks:
             request_id = re.search(r"&id=(.+?)(&|$)", redirect_location).group(1)
             polling_url = f"https://www.bing.com/images/create/async/results/{request_id}?q={encoded_prompt}"
             while True:
+                logging.debug("Polling!")
                 async with http_client.get(polling_url) as response:
+                    logging.debug(f"Polled: {response_text}")
                     response_text = await response.text()
                     if "Bing isn't avaiable right now, but everything should be back to normal very soon" in response_text:
                         raise TemporaryBackendError()
                     if response_text:
-                        logging.debug(f"response text for a generation result: {response_text}")
                         try:
                             error_json = json.loads(response_text)
                         except json.JSONDecodeError:
