@@ -35,7 +35,7 @@ asyncio.run(main())
 
 ### As a standalone program
 
-The "token file" is a file containing tokens from one or more accounts, where each token is placed on a separate line. This file can have comments that start with "#"
+The "token file" is a file containing tokens from one or more accounts, where each token is placed on a separate line. This file can have comments that start with "#". Be aware that the first token from the list is used to check if the prompt will pass the filter, which may lead the account the token belongs to to be banned if the prompt is actually unsafe, so it will be mindful to use the token from an account you don't care about as the first token. Repeating tokens are **not** removed
 
 ```bash
 python -m bing_image_creator_api -t '/path/to/token/file.txt' -n 10 -p "cute puppies" # Generate at least 10 images and then stop
