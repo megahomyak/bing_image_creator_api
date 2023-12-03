@@ -4,7 +4,6 @@ import urllib.parse
 import aiohttp
 
 from . import UnsafeImageContentDetected, create
-import imghdr
 import traceback
 
 parser = ArgumentParser()
@@ -20,7 +19,7 @@ with open(args.token_file, encoding="utf-8") as f:
 tokens = list(filter(lambda s: s and not s.startswith("#"), lines))
 generations_amount = 0
 
-async def create_and_save(token: str, token_number: int):
+async def create_and_save(token: str):
     global generations_amount
     async with aiohttp.ClientSession() as http_client:
         try:
@@ -33,8 +32,7 @@ async def create_and_save(token: str, token_number: int):
                 async with http_client.get(url) as file_response:
                     image_name = urllib.parse.urlparse(url).path.rsplit("/", 1)[1]
                     image_bytes = await file_response.read()
-                    file_extension = imghdr.what(None, h=image_bytes)
-                    file_name = f"{image_name}.{file_extension}"
+                    file_name = f"{image_name}.jpeg"
                     with open(file_name, "wb") as f:
                         f.write(image_bytes)
 
@@ -43,7 +41,7 @@ async def loop(token: str, token_number: int):
         while True:
             if args.minimum_generations_amount and args.minimum_generations_amount <= generations_amount:
                 break 
-            await create_and_save(token, token_number)
+            await create_and_save(token)
     except Exception:
         print(f"Account number {token_number} (...{token[-6:]}) is giving up:")
         traceback.print_exc()
