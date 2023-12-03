@@ -3,6 +3,8 @@ import asyncio
 import urllib.parse
 import aiohttp
 
+from bing_image_creator_api.api import TemporaryBackendError
+
 from . import UnsafeImageContentDetected, create
 import traceback
 
@@ -40,17 +42,23 @@ async def loop(token: str, token_number: int):
     try:
         while True:
             if args.minimum_generations_amount and args.minimum_generations_amount <= generations_amount:
-                break 
-            await create_and_save(token)
+                break
+            try:
+                await create_and_save(token)
+            except TemporaryBackendError:
+                pass
     except Exception:
         print(f"Account number {token_number} (...{token[-6:]}) is giving up:")
         traceback.print_exc()
 
 async def main():
-    try:
-        await create_and_save(tokens[0])
-    except UnsafeImageContentDetected:
-        pass
+    while True:
+        try:
+            await create_and_save(tokens[0])
+        except TemporaryBackendError:
+            pass
+        else:
+            break
     await asyncio.gather(*(
         loop(token, token_number)
         for token_number, token in enumerate(tokens)
